@@ -19,7 +19,8 @@ var init = function() {
     timeBetweenMoves: 1000,     //Time between each time the enemies move to a new location in ms
     explosionR: 75,             //Radius of bullet explosion
     statsWidth: 250,            //Width of stats box at end of level
-    statsHeight: 200            //Height of stats box at end of level
+    statsHeight: 200,           //Height of stats box at end of level
+    numShots: 2
   }
 
   var Enemy = function(x, y) {
@@ -107,6 +108,7 @@ var init = function() {
   var fireBullet = function(targetX, targetY) {
     currentBullet = new Bullet(settings.playerX, settings.playerY);
     bulletArray.push(currentBullet);
+    currentShotCount++;
 
     svg.selectAll('ellipse').data(bulletArray).enter()
         .append('ellipse')
@@ -159,7 +161,12 @@ var init = function() {
           screenShake();
           animateExplosion(d);
           killEnemies();
-          endLevel();
+          showScore();
+          if (currentShotCount === settings.numShots) {
+            endLevel();
+          } else {
+            canShoot = true;
+          }
       });
   }
 
@@ -259,8 +266,6 @@ var init = function() {
     //give option to replay
     console.log("Enemies killed: ", deadArray.length);
 
-    showScore();
-
     // Click to restart the game after bullet is fired
     d3.select('.gameSpace').on('click', function(d){
       //restart game
@@ -304,6 +309,8 @@ var init = function() {
   var bulletArray = [];   //Array to store the bullet for esasy manipulation with d3
   var deadArray = [];     //Push enemies that are dead into an array
   var currentBullet;      //The bullet that has been fired
+  var currentShotCount = 0;  //Keep track of number of shots fired by the player
+  var canShoot = true;                  //State of whether cannon can be fired
 
   //----MAIN GAME FUNCTION----
   var startGame = function() {
@@ -312,7 +319,6 @@ var init = function() {
     populateCannon();                     //Create the player and paint to screen
 
     var mouseCoordinates = [0, 0];        //d3 coordinates are stored in an array, [x, y]
-    var canShoot = true;                  //State of whether cannon can be fired
 
     //Move enemies every settings.timeBetweenMoves milliseconds
     setInterval(function(){ moveEnemies(); }, settings.timeBetweenMoves);
