@@ -17,10 +17,10 @@ var init = function() {
     numEnemies : 20,            //Number of enemies on screen
     enemyMovementSpeed: 1000,   //Time it takes enemies to move from their starting position to end in MS (lower is faster)
     timeBetweenMoves: 1000,     //Time between each time the enemies move to a new location in ms
-    explosionR: 75,             //Radius of bullet explosion
+    explosionR: 50,             //Radius of bullet explosion
     statsWidth: 250,            //Width of stats box at end of level
     statsHeight: 200,           //Height of stats box at end of level
-    numShots: 2
+    numShots: 10
   }
 
   var Enemy = function(x, y) {
@@ -173,30 +173,43 @@ var init = function() {
   var checkCollision = function() {
     var deadIndex = [];
 
-    for (var i = 0; i < enemyArray.length; i++){
+    for (var i = 0; i < enemyArray.length; i++) {
       //get distances between objects
       var dx = currentBullet.x - enemyArray[i].x;
       var dy = currentBullet.y - enemyArray[i].y;
-      var distance = Math.sqrt(dx * dx + dy * dy);
+      var distance = Math.sqrt((dx * dx) + (dy * dy));
 
       //check if the objects are close enough to be touching
-      if (distance <= settings.explosionR + settings.enemyR){
+      if (distance <= settings.explosionR + settings.enemyR) {
+        let deadEnemy = enemyArray[i];
+        console.log('Dead enemy index ', i);
+        console.log('dx: ', currentBullet.x - enemyArray[i].x);
+        console.log('dy: ', currentBullet.y - enemyArray[i].y);
+        console.log('distance: ', Math.sqrt((dx * dx) + (dy * dy)));
         //set all enemies within range to dead
-        enemyArray[i].isDead = true;
-        deadArray.push(enemyArray[i]);
+        deadEnemy.isDead = true;
+        deadEnemy.killShot = currentShotCount;
+        deadEnemy.killShotX = currentBullet.x;
+        deadEnemy.killShotY = currentBullet.y;
+        deadEnemy.distanceFromBullet = distance;
+        deadEnemy.dx = dx;
+        deadEnemy.dy = dy;
+        deadArray.push(deadEnemy);
+        console.log('Amaazzziiing shot! Enemy distance from super mega nuclear explosion: ', (distance.toFixed(0) * 1000) + ' meters.');
       }
     }
+    console.log(deadArray);
   }
 
-  var killEnemies = function(){
+  var killEnemies = function() {
+    // Loop through all enemies and set the correct class
     svg.selectAll('.enemy').data(enemyArray)
       .classed('alive', function(d){
-        //if enemy is dead, give it class .dead
-        if(d.isDead === false){
-          return true;
-        } else {
+        // If this enemy is dead, remove the alive class
+        if (d.isDead) {  // (I know I can write this in one line but I think this is more readable so bug off)
           return false;
         }
+        return true;
       }).classed('dead', function(d){
         if(d.isDead === false){
           return false;
@@ -298,19 +311,39 @@ var init = function() {
     }, 1000);
   }
 
+  var drawBackground = function() {
+
+
+
+
+    //draw background
+    // d3.select('.gameSpace').selectAll('defs').data([1]).append('defs');
+    // d3.select('defs').selectAll('pattern').data([1]).enter().append('pattern');
+    // d3.select('pattern')
+    //     .attr('id', 'background')
+    //     .attr('patternUnits', 'userSpaceOnUse')
+    //     .attr('x', 0).attr('y', 0)
+    //     .attr('width', settings.width).attr('height', settings.height);
+    // d3.select('pattern').selectAll('image').data(["background.jpg"]).enter()
+    //     .attr('href', function(d){ return d; })
+    //     .attr('width', settings.width).attr('height', settings.height)
+    //     .append('image');
+    // d3.select('svg').attr('fill', 'url(#background)');
+  }
+
   //----GLOBAL VARIABLES----
   //Create the initial svg element that will be the game board
   d3.select('.gameSpace').append("svg");
   var svg = d3.select('svg').attr("height", settings.height).attr("width", settings.width);
   var gameScreen = d3.select('.gameSpace').style("height", settings.height + "px").style("width", settings.width + "px");
 
-  var enemyArray = [];    //Array that stores all enemies on game screen
-  var cannonArray = [];   //d3 accepts arrays as data arguments so push the player object into an array even though there is only one of them
-  var bulletArray = [];   //Array to store the bullet for esasy manipulation with d3
-  var deadArray = [];     //Push enemies that are dead into an array
-  var currentBullet;      //The bullet that has been fired
-  var currentShotCount = 0;  //Keep track of number of shots fired by the player
-  var canShoot = true;                  //State of whether cannon can be fired
+  var enemyArray = [];        //Array that stores all enemies on game screen
+  var cannonArray = [];       //d3 accepts arrays as data arguments so push the player object into an array even though there is only one of them
+  var bulletArray = [];       //Array to store the bullet for esasy manipulation with d3
+  var deadArray = [];         //Push enemies that are dead into an array
+  var currentBullet;          //The bullet that has been fired
+  var currentShotCount = 0;   //Keep track of number of shots fired by the player
+  var canShoot = true;        //State of whether cannon can be fired
 
   //----MAIN GAME FUNCTION----
   var startGame = function() {
